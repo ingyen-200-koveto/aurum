@@ -1,0 +1,7 @@
+MetaTrader5
+pandas
+numpy
+python-telegram-bot
+mplfinance
+apscheduler
+python-dotenv

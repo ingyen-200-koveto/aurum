@@ -1,0 +1,5 @@
+print("=" * 40)
+print("🚀 AURUM AI")
+print("Version: 0.1")
+print("Status: ONLINE")
+print("=" * 40)
