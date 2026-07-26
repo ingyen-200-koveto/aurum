@@ -3,11 +3,15 @@ from market_data.mt5_connector import MT5Connector
 from strategy.strategy import StrategyEngine
 
 
+def print_separator() -> None:
+    print("=" * 50)
+
+
 def main() -> None:
-    print("=" * 45)
+    print_separator()
     print("🚀 AURUM AI")
-    print("Version: 0.9")
-    print("=" * 45)
+    print("Version: 1.0")
+    print_separator()
 
     connector = MT5Connector(symbol=SYMBOL)
     strategy = StrategyEngine()
@@ -52,19 +56,17 @@ def main() -> None:
             print(f"Low:   {latest_closed['low']}")
             print(f"Close: {latest_closed['close']}")
 
-        # H1 trend
         h1_candles = candle_data.get("H1")
-        h1_trend = "UNKNOWN"
 
         if h1_candles is not None:
-            h1_trend = strategy.detect_trend(h1_candles)
+            trend = strategy.detect_trend(h1_candles)
 
-            print("\n" + "=" * 45)
-            print("📈 H1 TREND ELEMZÉS")
-            print(f"Trend: {h1_trend}")
-            print("=" * 45)
+            print()
+            print_separator()
+            print("📈 H1 TREND")
+            print(f"Trend: {trend}")
+            print_separator()
 
-        # M15 market structure, BOS és CHoCH
         m15_candles = candle_data.get("M15")
 
         if m15_candles is not None:
@@ -73,43 +75,19 @@ def main() -> None:
                 swing_length=3,
             )
 
-            print("\n" + "=" * 45)
+            print()
+            print_separator()
             print("🏗️ M15 MARKET STRUCTURE")
             print(f"Struktúra: {market_structure['structure']}")
-
-            if market_structure["last_high"] is not None:
-                print(
-                    "Utolsó swing high: "
-                    f"{market_structure['last_high']['price']} "
-                    f"({market_structure['last_high']['time']})"
-                )
-
-                print(
-                    "Előző swing high: "
-                    f"{market_structure['previous_high']['price']} "
-                    f"({market_structure['previous_high']['time']})"
-                )
-
-                print(
-                    "Utolsó swing low: "
-                    f"{market_structure['last_low']['price']} "
-                    f"({market_structure['last_low']['time']})"
-                )
-
-                print(
-                    "Előző swing low: "
-                    f"{market_structure['previous_low']['price']} "
-                    f"({market_structure['previous_low']['time']})"
-                )
-
-            print("=" * 45)
+            print_separator()
 
             bos_result = strategy.detect_bos(
                 candles=m15_candles,
                 swing_length=3,
             )
 
-            print("\n" + "=" * 45)
+            print()
+            print_separator()
             print("💥 M15 BREAK OF STRUCTURE")
 
             if bos_result["bos"]:
@@ -123,17 +101,18 @@ def main() -> None:
                 print(f"Utolsó záróár: {bos_result['close']}")
                 print(f"Idő: {bos_result['time']}")
 
-            print("=" * 45)
+            print_separator()
 
             choch_result = strategy.detect_choch(
                 candles=m15_candles,
                 swing_length=3,
             )
 
-            print("\n" + "=" * 45)
+            print()
+            print_separator()
             print("🔄 M15 CHANGE OF CHARACTER")
             print(
-                "Korábbi struktúra: "
+                f"Korábbi struktúra: "
                 f"{choch_result['previous_structure']}"
             )
 
@@ -148,9 +127,8 @@ def main() -> None:
                 print(f"Utolsó záróár: {choch_result['close']}")
                 print(f"Idő: {choch_result['time']}")
 
-            print("=" * 45)
+            print_separator()
 
-        # M5 liquidity sweep és FVG
         m5_candles = candle_data.get("M5")
 
         if m5_candles is not None:
@@ -159,7 +137,8 @@ def main() -> None:
                 swing_length=3,
             )
 
-            print("\n" + "=" * 45)
+            print()
+            print_separator()
             print("💧 M5 LIQUIDITY SWEEP")
 
             if sweep_result["sweep"]:
@@ -174,26 +153,27 @@ def main() -> None:
                 print(f"Utolsó záróár: {sweep_result['close']}")
                 print(f"Idő: {sweep_result['time']}")
 
-            print("=" * 45)
+            print_separator()
 
             fvg_result = strategy.detect_fvg(
                 candles=m5_candles,
                 lookback=30,
             )
 
-            print("\n" + "=" * 45)
+            print()
+            print_separator()
             print("⚡ M5 FAIR VALUE GAP")
 
             if fvg_result["fvg"]:
                 print("FVG: TALÁLHATÓ ✅")
                 print(f"Irány: {fvg_result['direction']}")
                 print(
-                    "FVG zóna: "
+                    f"FVG zóna: "
                     f"{fvg_result['zone_low']} - "
                     f"{fvg_result['zone_high']}"
                 )
                 print(
-                    "FVG mérete: "
+                    f"FVG mérete: "
                     f"{round(fvg_result['gap_size'], 2)}"
                 )
                 print(f"Létrejött: {fvg_result['time']}")
@@ -205,7 +185,48 @@ def main() -> None:
             else:
                 print("FVG: NEM TALÁLHATÓ")
 
-            print("=" * 45)
+            print_separator()
+
+            order_block_result = strategy.detect_order_block(
+                candles=m5_candles,
+                lookback=40,
+                impulse_candles=3,
+                minimum_impulse_ratio=1.5,
+            )
+
+            print()
+            print_separator()
+            print("🧱 M5 ORDER BLOCK")
+
+            if order_block_result["order_block"]:
+                print("Order Block: TALÁLHATÓ ✅")
+                print(f"Irány: {order_block_result['direction']}")
+                print(
+                    f"OB zóna: "
+                    f"{order_block_result['zone_low']} - "
+                    f"{order_block_result['zone_high']}"
+                )
+                print(f"Gyertya open: {order_block_result['open']}")
+                print(f"Gyertya close: {order_block_result['close']}")
+                print(
+                    f"Impulzus mérete: "
+                    f"{round(order_block_result['impulse_size'], 2)}"
+                )
+                print(f"Létrejött: {order_block_result['time']}")
+
+                if order_block_result["active"]:
+                    print("Állapot: AKTÍV ✅")
+                else:
+                    print("Állapot: ÉRVÉNYTELEN ❌")
+
+                if order_block_result["mitigated"]:
+                    print("Mitigáció: AZ ÁR MÁR VISSZATÉRT A ZÓNÁBA")
+                else:
+                    print("Mitigáció: AZ ÁR MÉG NEM TÉRT VISSZA")
+            else:
+                print("Order Block: NEM TALÁLHATÓ")
+
+            print_separator()
 
     finally:
         connector.disconnect()

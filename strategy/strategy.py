@@ -450,14 +450,6 @@ class StrategyEngine:
     ) -> dict:
         """
         Fair Value Gap felismerése három lezárt gyertyából.
-
-        Bullish FVG:
-        a harmadik gyertya low értéke magasabban van,
-        mint az első gyertya high értéke.
-
-        Bearish FVG:
-        a harmadik gyertya high értéke alacsonyabban van,
-        mint az első gyertya low értéke.
         """
 
         default_result = {
@@ -544,4 +536,174 @@ class StrategyEngine:
             "gap_size": latest_fvg["gap_size"],
             "time": latest_fvg["time"],
             "active": active,
+        }
+
+    def detect_order_block(
+        self,
+        candles: pd.DataFrame,
+        lookback: int = 40,
+        impulse_candles: int = 3,
+        minimum_impulse_ratio: float = 1.5,
+    ) -> dict:
+        """
+        Order Block felismerése.
+
+        Bullish Order Block:
+        - az utolsó bearish gyertya
+        - amely után erős bullish elmozdulás következett
+
+        Bearish Order Block:
+        - az utolsó bullish gyertya
+        - amely után erős bearish elmozdulás következett
+
+        A zónát a teljes gyertya high-low tartománya adja.
+        """
+
+        default_result = {
+            "order_block": False,
+            "direction": "NONE",
+            "zone_low": None,
+            "zone_high": None,
+            "open": None,
+            "close": None,
+            "time": None,
+            "active": False,
+            "mitigated": False,
+            "impulse_size": None,
+        }
+
+        if candles is None or len(candles) < impulse_candles + 5:
+            return default_result
+
+        data = candles.iloc[:-1].copy().reset_index(drop=True)
+
+        start_index = max(
+            0,
+            len(data) - lookback,
+        )
+
+        detected_blocks: list[dict] = []
+
+        for index in range(
+            start_index,
+            len(data) - impulse_candles,
+        ):
+            order_candle = data.iloc[index]
+
+            candle_open = float(order_candle["open"])
+            candle_close = float(order_candle["close"])
+            candle_high = float(order_candle["high"])
+            candle_low = float(order_candle["low"])
+
+            candle_body = abs(candle_close - candle_open)
+
+            if candle_body <= 0:
+                continue
+
+            future_candles = data.iloc[
+                index + 1:index + 1 + impulse_candles
+            ]
+
+            future_high = float(future_candles["high"].max())
+            future_low = float(future_candles["low"].min())
+            future_close = float(future_candles.iloc[-1]["close"])
+
+            is_bearish_candle = candle_close < candle_open
+            is_bullish_candle = candle_close > candle_open
+
+            bullish_impulse = future_high - candle_high
+            bearish_impulse = candle_low - future_low
+
+            bullish_order_block = (
+                is_bearish_candle
+                and future_close > candle_high
+                and bullish_impulse >= candle_body * minimum_impulse_ratio
+            )
+
+            bearish_order_block = (
+                is_bullish_candle
+                and future_close < candle_low
+                and bearish_impulse >= candle_body * minimum_impulse_ratio
+            )
+
+            if bullish_order_block:
+                detected_blocks.append({
+                    "direction": "BULLISH",
+                    "zone_low": candle_low,
+                    "zone_high": candle_high,
+                    "open": candle_open,
+                    "close": candle_close,
+                    "time": order_candle["time"],
+                    "index": index,
+                    "impulse_size": bullish_impulse,
+                })
+
+            if bearish_order_block:
+                detected_blocks.append({
+                    "direction": "BEARISH",
+                    "zone_low": candle_low,
+                    "zone_high": candle_high,
+                    "open": candle_open,
+                    "close": candle_close,
+                    "time": order_candle["time"],
+                    "index": index,
+                    "impulse_size": bearish_impulse,
+                })
+
+        if not detected_blocks:
+            return default_result
+
+        latest_order_block = detected_blocks[-1]
+
+        candles_after_confirmation = data.iloc[
+            latest_order_block["index"] + impulse_candles + 1:
+        ]
+
+        mitigated = False
+        active = True
+
+        if not candles_after_confirmation.empty:
+            if latest_order_block["direction"] == "BULLISH":
+                returned_to_zone = (
+                    candles_after_confirmation["low"]
+                    <= latest_order_block["zone_high"]
+                ).any()
+
+                invalidated = (
+                    candles_after_confirmation["close"]
+                    < latest_order_block["zone_low"]
+                ).any()
+
+                mitigated = bool(returned_to_zone)
+
+                if invalidated:
+                    active = False
+
+            elif latest_order_block["direction"] == "BEARISH":
+                returned_to_zone = (
+                    candles_after_confirmation["high"]
+                    >= latest_order_block["zone_low"]
+                ).any()
+
+                invalidated = (
+                    candles_after_confirmation["close"]
+                    > latest_order_block["zone_high"]
+                ).any()
+
+                mitigated = bool(returned_to_zone)
+
+                if invalidated:
+                    active = False
+
+        return {
+            "order_block": True,
+            "direction": latest_order_block["direction"],
+            "zone_low": latest_order_block["zone_low"],
+            "zone_high": latest_order_block["zone_high"],
+            "open": latest_order_block["open"],
+            "close": latest_order_block["close"],
+            "time": latest_order_block["time"],
+            "active": active,
+            "mitigated": mitigated,
+            "impulse_size": latest_order_block["impulse_size"],
         }
