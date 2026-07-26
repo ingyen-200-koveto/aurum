@@ -1,14 +1,16 @@
 from config import CANDLE_COUNT, SYMBOL, TIMEFRAMES
 from market_data.mt5_connector import MT5Connector
+from strategy.strategy import StrategyEngine
 
 
 def main() -> None:
     print("=" * 40)
     print("🚀 AURUM AI")
-    print("Version: 0.3")
+    print("Version: 0.4")
     print("=" * 40)
 
     connector = MT5Connector(symbol=SYMBOL)
+    strategy = StrategyEngine()
 
     if not connector.connect():
         return
@@ -24,6 +26,8 @@ def main() -> None:
             print(f"Bid: {tick.bid}")
             print(f"Spread: {spread}")
 
+        candle_data = {}
+
         for name, timeframe in TIMEFRAMES.items():
             candles = connector.get_candles(
                 timeframe=timeframe,
@@ -33,14 +37,26 @@ def main() -> None:
             if candles is None:
                 continue
 
-            latest = candles.iloc[-1]
+            candle_data[name] = candles
+
+            latest_closed = candles.iloc[-2]
 
             print(f"\n📊 {name} – {len(candles)} gyertya lekérve")
-            print(f"Idő:   {latest['time']}")
-            print(f"Open:  {latest['open']}")
-            print(f"High:  {latest['high']}")
-            print(f"Low:   {latest['low']}")
-            print(f"Close: {latest['close']}")
+            print(f"Utolsó lezárt gyertya: {latest_closed['time']}")
+            print(f"Open:  {latest_closed['open']}")
+            print(f"High:  {latest_closed['high']}")
+            print(f"Low:   {latest_closed['low']}")
+            print(f"Close: {latest_closed['close']}")
+
+        h1_candles = candle_data.get("H1")
+
+        if h1_candles is not None:
+            trend = strategy.detect_trend(h1_candles)
+
+            print("\n" + "=" * 40)
+            print("📈 H1 TREND ELEMZÉS")
+            print(f"Trend: {trend}")
+            print("=" * 40)
 
     finally:
         connector.disconnect()
