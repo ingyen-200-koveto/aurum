@@ -221,7 +221,6 @@ class StrategyEngine:
 
         latest_close = float(latest_closed["close"])
         latest_time = latest_closed["time"]
-
         latest_candle_index = len(candles) - 2
 
         valid_highs = [
@@ -275,14 +274,6 @@ class StrategyEngine:
     ) -> dict:
         """
         Change of Character felismerése.
-
-        Bullish CHoCH:
-        a korábbi struktúra bearish, majd az ár
-        a legutóbbi swing high fölött zár.
-
-        Bearish CHoCH:
-        a korábbi struktúra bullish, majd az ár
-        a legutóbbi swing low alatt zár.
         """
 
         default_result = {
@@ -303,9 +294,9 @@ class StrategyEngine:
         )
 
         previous_structure = structure_result["structure"]
+        default_result["previous_structure"] = previous_structure
 
         if previous_structure not in {"BULLISH", "BEARISH"}:
-            default_result["previous_structure"] = previous_structure
             return default_result
 
         last_high = structure_result["last_high"]
@@ -350,6 +341,112 @@ class StrategyEngine:
             "direction": "NONE",
             "previous_structure": previous_structure,
             "broken_level": None,
+            "close": latest_close,
+            "time": latest_time,
+        }
+
+    def detect_liquidity_sweep(
+        self,
+        candles: pd.DataFrame,
+        swing_length: int = 3,
+    ) -> dict:
+        """
+        Liquidity sweep felismerése az utolsó lezárt gyertyán.
+
+        Bullish sweep:
+        - a gyertya leszúr a legutóbbi swing low alá
+        - de a gyertya a swing low felett zár
+
+        Bearish sweep:
+        - a gyertya felszúr a legutóbbi swing high fölé
+        - de a gyertya a swing high alatt zár
+        """
+
+        default_result = {
+            "sweep": False,
+            "direction": "NONE",
+            "swept_level": None,
+            "wick_price": None,
+            "close": None,
+            "time": None,
+        }
+
+        if candles is None or len(candles) < 20:
+            return default_result
+
+        swings = self.find_swings(
+            candles=candles,
+            swing_length=swing_length,
+        )
+
+        swing_highs = swings["highs"]
+        swing_lows = swings["lows"]
+
+        if not swing_highs or not swing_lows:
+            return default_result
+
+        latest_closed = candles.iloc[-2]
+
+        latest_high = float(latest_closed["high"])
+        latest_low = float(latest_closed["low"])
+        latest_close = float(latest_closed["close"])
+        latest_time = latest_closed["time"]
+
+        latest_candle_index = len(candles) - 2
+
+        valid_highs = [
+            swing
+            for swing in swing_highs
+            if swing["index"] < latest_candle_index
+        ]
+
+        valid_lows = [
+            swing
+            for swing in swing_lows
+            if swing["index"] < latest_candle_index
+        ]
+
+        if not valid_highs or not valid_lows:
+            return default_result
+
+        last_swing_high = valid_highs[-1]
+        last_swing_low = valid_lows[-1]
+
+        bullish_sweep = (
+            latest_low < last_swing_low["price"]
+            and latest_close > last_swing_low["price"]
+        )
+
+        bearish_sweep = (
+            latest_high > last_swing_high["price"]
+            and latest_close < last_swing_high["price"]
+        )
+
+        if bullish_sweep:
+            return {
+                "sweep": True,
+                "direction": "BULLISH",
+                "swept_level": last_swing_low["price"],
+                "wick_price": latest_low,
+                "close": latest_close,
+                "time": latest_time,
+            }
+
+        if bearish_sweep:
+            return {
+                "sweep": True,
+                "direction": "BEARISH",
+                "swept_level": last_swing_high["price"],
+                "wick_price": latest_high,
+                "close": latest_close,
+                "time": latest_time,
+            }
+
+        return {
+            "sweep": False,
+            "direction": "NONE",
+            "swept_level": None,
+            "wick_price": None,
             "close": latest_close,
             "time": latest_time,
         }
