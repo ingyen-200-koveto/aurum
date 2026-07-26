@@ -1,25 +1,42 @@
-# Környezeti változók és titkos adatok
-.env
+# Virtuális környezet
+.venv/
+venv/
 
-# Python
+# Python gyorsítótár
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
 
-# Virtuális környezet
-venv/
-.venv/
-env/
+# Titkos adatok
+.env
+.env.*
+!.env.example
 
-# IDE
+# Fejlesztői környezet
 .vscode/
 .idea/
 
-# AURUM állapotadatok
-data/signal_state.json
-data/*.tmp
+# Git és rendszerfájlok
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Logok
-logs/
+# Naplók
 *.log
+logs/
+
+# Generált chartok
+data/charts/
+*.png
+
+# Ideiglenes fájlok
+*.tmp
+*.bak
+
+# Pytest
+.pytest_cache/
+
+# Build
+build/
+dist/
+*.egg-info/
