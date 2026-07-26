@@ -6,7 +6,7 @@ from strategy.strategy import StrategyEngine
 def main() -> None:
     print("=" * 45)
     print("🚀 AURUM AI")
-    print("Version: 0.8")
+    print("Version: 0.9")
     print("=" * 45)
 
     connector = MT5Connector(symbol=SYMBOL)
@@ -52,16 +52,19 @@ def main() -> None:
             print(f"Low:   {latest_closed['low']}")
             print(f"Close: {latest_closed['close']}")
 
+        # H1 trend
         h1_candles = candle_data.get("H1")
+        h1_trend = "UNKNOWN"
 
         if h1_candles is not None:
-            trend = strategy.detect_trend(h1_candles)
+            h1_trend = strategy.detect_trend(h1_candles)
 
             print("\n" + "=" * 45)
             print("📈 H1 TREND ELEMZÉS")
-            print(f"Trend: {trend}")
+            print(f"Trend: {h1_trend}")
             print("=" * 45)
 
+        # M15 market structure, BOS és CHoCH
         m15_candles = candle_data.get("M15")
 
         if m15_candles is not None:
@@ -147,6 +150,7 @@ def main() -> None:
 
             print("=" * 45)
 
+        # M5 liquidity sweep és FVG
         m5_candles = candle_data.get("M5")
 
         if m5_candles is not None:
@@ -161,20 +165,45 @@ def main() -> None:
             if sweep_result["sweep"]:
                 print("Liquidity sweep: IGEN ✅")
                 print(f"Irány: {sweep_result['direction']}")
-                print(
-                    "Kisöpört szint: "
-                    f"{sweep_result['swept_level']}"
-                )
-                print(
-                    "Kanóc széle: "
-                    f"{sweep_result['wick_price']}"
-                )
+                print(f"Kisöpört szint: {sweep_result['swept_level']}")
+                print(f"Kanóc széle: {sweep_result['wick_price']}")
                 print(f"Záróár: {sweep_result['close']}")
                 print(f"Idő: {sweep_result['time']}")
             else:
                 print("Liquidity sweep: NINCS")
                 print(f"Utolsó záróár: {sweep_result['close']}")
                 print(f"Idő: {sweep_result['time']}")
+
+            print("=" * 45)
+
+            fvg_result = strategy.detect_fvg(
+                candles=m5_candles,
+                lookback=30,
+            )
+
+            print("\n" + "=" * 45)
+            print("⚡ M5 FAIR VALUE GAP")
+
+            if fvg_result["fvg"]:
+                print("FVG: TALÁLHATÓ ✅")
+                print(f"Irány: {fvg_result['direction']}")
+                print(
+                    "FVG zóna: "
+                    f"{fvg_result['zone_low']} - "
+                    f"{fvg_result['zone_high']}"
+                )
+                print(
+                    "FVG mérete: "
+                    f"{round(fvg_result['gap_size'], 2)}"
+                )
+                print(f"Létrejött: {fvg_result['time']}")
+
+                if fvg_result["active"]:
+                    print("Állapot: AKTÍV ✅")
+                else:
+                    print("Állapot: BETÖLTÖTT ❌")
+            else:
+                print("FVG: NEM TALÁLHATÓ")
 
             print("=" * 45)
 

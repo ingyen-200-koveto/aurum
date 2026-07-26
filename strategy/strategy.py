@@ -352,14 +352,6 @@ class StrategyEngine:
     ) -> dict:
         """
         Liquidity sweep felismerése az utolsó lezárt gyertyán.
-
-        Bullish sweep:
-        - a gyertya leszúr a legutóbbi swing low alá
-        - de a gyertya a swing low felett zár
-
-        Bearish sweep:
-        - a gyertya felszúr a legutóbbi swing high fölé
-        - de a gyertya a swing high alatt zár
         """
 
         default_result = {
@@ -449,4 +441,107 @@ class StrategyEngine:
             "wick_price": None,
             "close": latest_close,
             "time": latest_time,
+        }
+
+    def detect_fvg(
+        self,
+        candles: pd.DataFrame,
+        lookback: int = 30,
+    ) -> dict:
+        """
+        Fair Value Gap felismerése három lezárt gyertyából.
+
+        Bullish FVG:
+        a harmadik gyertya low értéke magasabban van,
+        mint az első gyertya high értéke.
+
+        Bearish FVG:
+        a harmadik gyertya high értéke alacsonyabban van,
+        mint az első gyertya low értéke.
+        """
+
+        default_result = {
+            "fvg": False,
+            "direction": "NONE",
+            "zone_low": None,
+            "zone_high": None,
+            "gap_size": None,
+            "time": None,
+            "active": False,
+        }
+
+        if candles is None or len(candles) < 5:
+            return default_result
+
+        data = candles.iloc[:-1].copy().reset_index(drop=True)
+
+        start_index = max(2, len(data) - lookback)
+        detected_gaps: list[dict] = []
+
+        for index in range(start_index, len(data)):
+            first_candle = data.iloc[index - 2]
+            third_candle = data.iloc[index]
+
+            first_high = float(first_candle["high"])
+            first_low = float(first_candle["low"])
+            third_high = float(third_candle["high"])
+            third_low = float(third_candle["low"])
+
+            if third_low > first_high:
+                detected_gaps.append({
+                    "direction": "BULLISH",
+                    "zone_low": first_high,
+                    "zone_high": third_low,
+                    "gap_size": third_low - first_high,
+                    "time": third_candle["time"],
+                    "index": index,
+                })
+
+            if third_high < first_low:
+                detected_gaps.append({
+                    "direction": "BEARISH",
+                    "zone_low": third_high,
+                    "zone_high": first_low,
+                    "gap_size": first_low - third_high,
+                    "time": third_candle["time"],
+                    "index": index,
+                })
+
+        if not detected_gaps:
+            return default_result
+
+        latest_fvg = detected_gaps[-1]
+
+        later_candles = data.iloc[
+            latest_fvg["index"] + 1:
+        ]
+
+        active = True
+
+        if latest_fvg["direction"] == "BULLISH":
+            if not later_candles.empty:
+                lowest_price = float(
+                    later_candles["low"].min()
+                )
+
+                if lowest_price <= latest_fvg["zone_low"]:
+                    active = False
+
+        elif latest_fvg["direction"] == "BEARISH":
+            if not later_candles.empty:
+                highest_price = float(
+                    later_candles["high"].max()
+                )
+
+                if highest_price >= latest_fvg["zone_high"]:
+                    active = False
+
+        return {
+            "fvg": True,
+            "direction": latest_fvg["direction"],
+            "zone_low": latest_fvg["zone_low"],
+            "zone_high": latest_fvg["zone_high"],
+            "gap_size": latest_fvg["gap_size"],
+            "time": latest_fvg["time"],
+            "active": active,
         }
