@@ -6,7 +6,7 @@ from strategy.strategy import StrategyEngine
 def main() -> None:
     print("=" * 45)
     print("🚀 AURUM AI")
-    print("Version: 0.6")
+    print("Version: 0.7")
     print("=" * 45)
 
     connector = MT5Connector(symbol=SYMBOL)
@@ -119,32 +119,45 @@ def main() -> None:
 
             if bos_result["bos"]:
                 print("BOS: IGEN ✅")
-                print(
-                    f"Irány: {bos_result['direction']}"
-                )
+                print(f"Irány: {bos_result['direction']}")
                 print(
                     "Áttört szint: "
                     f"{bos_result['broken_level']}"
                 )
-                print(
-                    "Záróár: "
-                    f"{bos_result['close']}"
-                )
-                print(
-                    "Idő: "
-                    f"{bos_result['time']}"
-                )
-
+                print(f"Záróár: {bos_result['close']}")
+                print(f"Idő: {bos_result['time']}")
             else:
                 print("BOS: NINCS")
+                print(f"Utolsó záróár: {bos_result['close']}")
+                print(f"Idő: {bos_result['time']}")
+
+            print("=" * 45)
+
+            choch_result = strategy.detect_choch(
+                candles=m15_candles,
+                swing_length=3,
+            )
+
+            print("\n" + "=" * 45)
+            print("🔄 M15 CHANGE OF CHARACTER")
+            print(
+                "Korábbi struktúra: "
+                f"{choch_result['previous_structure']}"
+            )
+
+            if choch_result["choch"]:
+                print("CHoCH: IGEN ✅")
+                print(f"Új irány: {choch_result['direction']}")
                 print(
-                    "Utolsó záróár: "
-                    f"{bos_result['close']}"
+                    "Áttört szint: "
+                    f"{choch_result['broken_level']}"
                 )
-                print(
-                    "Idő: "
-                    f"{bos_result['time']}"
-                )
+                print(f"Záróár: {choch_result['close']}")
+                print(f"Idő: {choch_result['time']}")
+            else:
+                print("CHoCH: NINCS")
+                print(f"Utolsó záróár: {choch_result['close']}")
+                print(f"Idő: {choch_result['time']}")
 
             print("=" * 45)
 

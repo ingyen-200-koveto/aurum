@@ -46,7 +46,7 @@ class StrategyEngine:
     ) -> dict:
         """
         Swing high és swing low pontok keresése.
-        A jelenlegi, még nyitott gyertyát nem használja.
+        A jelenlegi nyitott gyertyát nem használja.
         """
 
         if candles is None or len(candles) < swing_length * 2 + 5:
@@ -193,14 +193,6 @@ class StrategyEngine:
     ) -> dict:
         """
         Break of Structure felismerése.
-
-        Bullish BOS:
-        az utolsó lezárt gyertya záróára áttöri
-        a legutóbbi korábbi swing high szintjét.
-
-        Bearish BOS:
-        az utolsó lezárt gyertya záróára áttöri
-        a legutóbbi korábbi swing low szintjét.
         """
 
         default_result = {
@@ -250,15 +242,7 @@ class StrategyEngine:
         last_swing_high = valid_highs[-1]
         last_swing_low = valid_lows[-1]
 
-        bullish_bos = (
-            latest_close > last_swing_high["price"]
-        )
-
-        bearish_bos = (
-            latest_close < last_swing_low["price"]
-        )
-
-        if bullish_bos:
+        if latest_close > last_swing_high["price"]:
             return {
                 "bos": True,
                 "direction": "BULLISH",
@@ -267,7 +251,7 @@ class StrategyEngine:
                 "time": latest_time,
             }
 
-        if bearish_bos:
+        if latest_close < last_swing_low["price"]:
             return {
                 "bos": True,
                 "direction": "BEARISH",
@@ -279,6 +263,92 @@ class StrategyEngine:
         return {
             "bos": False,
             "direction": "NONE",
+            "broken_level": None,
+            "close": latest_close,
+            "time": latest_time,
+        }
+
+    def detect_choch(
+        self,
+        candles: pd.DataFrame,
+        swing_length: int = 3,
+    ) -> dict:
+        """
+        Change of Character felismerése.
+
+        Bullish CHoCH:
+        a korábbi struktúra bearish, majd az ár
+        a legutóbbi swing high fölött zár.
+
+        Bearish CHoCH:
+        a korábbi struktúra bullish, majd az ár
+        a legutóbbi swing low alatt zár.
+        """
+
+        default_result = {
+            "choch": False,
+            "direction": "NONE",
+            "previous_structure": "UNKNOWN",
+            "broken_level": None,
+            "close": None,
+            "time": None,
+        }
+
+        if candles is None or len(candles) < 30:
+            return default_result
+
+        structure_result = self.detect_market_structure(
+            candles=candles,
+            swing_length=swing_length,
+        )
+
+        previous_structure = structure_result["structure"]
+
+        if previous_structure not in {"BULLISH", "BEARISH"}:
+            default_result["previous_structure"] = previous_structure
+            return default_result
+
+        last_high = structure_result["last_high"]
+        last_low = structure_result["last_low"]
+
+        if last_high is None or last_low is None:
+            return default_result
+
+        latest_closed = candles.iloc[-2]
+
+        latest_close = float(latest_closed["close"])
+        latest_time = latest_closed["time"]
+
+        if (
+            previous_structure == "BEARISH"
+            and latest_close > last_high["price"]
+        ):
+            return {
+                "choch": True,
+                "direction": "BULLISH",
+                "previous_structure": previous_structure,
+                "broken_level": last_high["price"],
+                "close": latest_close,
+                "time": latest_time,
+            }
+
+        if (
+            previous_structure == "BULLISH"
+            and latest_close < last_low["price"]
+        ):
+            return {
+                "choch": True,
+                "direction": "BEARISH",
+                "previous_structure": previous_structure,
+                "broken_level": last_low["price"],
+                "close": latest_close,
+                "time": latest_time,
+            }
+
+        return {
+            "choch": False,
+            "direction": "NONE",
+            "previous_structure": previous_structure,
             "broken_level": None,
             "close": latest_close,
             "time": latest_time,
