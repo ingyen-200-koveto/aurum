@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AURUM Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">TRADING INTELLIGENCE</p>
+        <h1>AURUM <span>Dashboard</span></h1>
+      </div>
+      <div class="status-wrap">
+        <span id="botDot" class="dot"></span>
+        <div><strong id="botStatus">BETÖLTÉS…</strong><small id="lastUpdate">–</small></div>
+      </div>
+    </header>
+
+    <section class="hero-grid">
+      <article class="card active-card">
+        <div class="card-head"><h2>Aktív jelzés</h2><span id="signalStatus" class="pill neutral">NINCS</span></div>
+        <div id="noSignal" class="empty">Jelenleg nincs aktív vagy belépésre váró jelzés.</div>
+        <div id="signalContent" class="hidden">
+          <div class="signal-title"><span id="signalSymbol">–</span><strong id="signalDirection">–</strong></div>
+          <div class="level-grid">
+            <div><small>ENTRY</small><b id="entry">–</b></div>
+            <div><small>AKTUÁLIS SL</small><b id="sl">–</b></div>
+            <div><small>TP1</small><b id="tp1">–</b></div>
+            <div><small>TP2</small><b id="tp2">–</b></div>
+            <div><small>TP3</small><b id="tp3">–</b></div>
+            <div><small>SL ÁLLAPOT</small><b id="stopStage">–</b></div>
+          </div>
+          <div class="progress"><div id="tpProgress"></div></div>
+          <p id="signalMeta" class="muted"></p>
+        </div>
+      </article>
+
+      <article class="card system-card">
+        <div class="card-head"><h2>Rendszer</h2><span id="mt5Status" class="pill neutral">UNKNOWN</span></div>
+        <div class="system-row"><span>Bot állapot</span><b id="systemBot">–</b></div>
+        <div class="system-row"><span>MT5 kapcsolat</span><b id="systemMt5">–</b></div>
+        <div class="system-row"><span>Mai jelzések</span><b id="dailyCount">0</b></div>
+        <div class="system-row"><span>Cooldown vége</span><b id="cooldown">Nincs</b></div>
+        <div class="system-row"><span>Adatfrissesség</span><b id="dataAge">–</b></div>
+      </article>
+    </section>
+
+    <section class="stats-grid">
+      <article class="metric"><small>ÖSSZES JELZÉS</small><strong id="signals">0</strong><span id="todaySignals">Ma: 0</span></article>
+      <article class="metric"><small>WIN RATE</small><strong id="winRate">0%</strong><span id="winsLosses">0 win / 0 loss</span></article>
+      <article class="metric"><small>NETTÓ R</small><strong id="netR">0.00R</strong><span id="avgR">Átlag: 0.00R</span></article>
+      <article class="metric"><small>PROFIT FACTOR</small><strong id="profitFactor">0.00</strong><span id="breakeven">Breakeven: 0</span></article>
+    </section>
+
+    <section class="card targets-card">
+      <div class="card-head"><h2>Target teljesítmény</h2><span class="muted">Összesített</span></div>
+      <div class="target-row"><span>TP1 találatok</span><div class="bar"><i id="tp1Bar"></i></div><b id="tp1Hits">0</b></div>
+      <div class="target-row"><span>TP2 találatok</span><div class="bar"><i id="tp2Bar"></i></div><b id="tp2Hits">0</b></div>
+      <div class="target-row"><span>TP3 találatok</span><div class="bar"><i id="tp3Bar"></i></div><b id="tp3Hits">0</b></div>
+    </section>
+
+    <section class="card history-card">
+      <div class="card-head">
+        <div><h2>Trade history</h2><p class="muted">Az utolsó 100 lezárt jelzés</p></div>
+        <a class="button" href="/api/history.csv">CSV export</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Idő</th><th>Symbol</th><th>Irány</th><th>Eredmény</th><th>Elért TP</th><th>Entry</th><th>Exit</th></tr></thead>
+          <tbody id="historyBody"><tr><td colspan="7" class="empty">Betöltés…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+"""AURUM web dashboard package."""

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AURUM Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <main class="shell">
+    <header class="topbar">
+      <div><p class="eyebrow">TRADING INTELLIGENCE</p><h1>AURUM <span>Dashboard</span></h1></div>
+      <div class="header-actions"><a class="button secondary" href="/api/history.csv">CSV export</a><div id="clock" class="clock">--:--:--</div></div>
+    </header>
+
+    <section class="status-grid">
+      <article class="card status-card"><div class="label">Bot állapot</div><div class="status-line"><span id="bot-dot" class="dot"></span><strong id="bot-status">Betöltés...</strong></div><small id="heartbeat">Nincs adat</small></article>
+      <article class="card status-card"><div class="label">MT5 kapcsolat</div><div class="status-line"><span id="mt5-dot" class="dot"></span><strong id="mt5-status">Betöltés...</strong></div><small id="symbol">Instrumentum: --</small></article>
+      <article class="card metric-card"><div class="label">Mai jelzések</div><strong id="today-signals">0</strong><small id="daily-counter">0 létrehozva</small></article>
+      <article class="card metric-card"><div class="label">Összesített win rate</div><strong id="win-rate">0%</strong><small id="record">0 győzelem / 0 veszteség</small></article>
+    </section>
+
+    <section class="main-grid">
+      <article class="card active-card">
+        <div class="section-heading"><div><p class="eyebrow">LIVE POSITION</p><h2>Aktív jelzés</h2></div><span id="signal-status" class="badge neutral">NINCS</span></div>
+        <div id="no-signal" class="empty-state"><div class="pulse-ring"></div><p>Jelenleg nincs aktív jelzés.</p></div>
+        <div id="signal-content" class="signal-content hidden">
+          <div class="signal-title"><strong id="signal-symbol">--</strong><span id="signal-direction" class="direction">--</span></div>
+          <div class="level-grid">
+            <div><span>Entry zóna</span><strong id="entry-zone">--</strong></div><div><span>Aktuális SL</span><strong id="stop-loss">--</strong></div>
+            <div><span>TP1</span><strong id="tp1">--</strong></div><div><span>TP2</span><strong id="tp2">--</strong></div><div><span>TP3</span><strong id="tp3">--</strong></div><div><span>Risk kezelés</span><strong id="stop-stage">--</strong></div>
+          </div>
+          <div class="progress"><div id="tp-progress" class="progress-fill"></div></div><div class="progress-labels"><span>Entry</span><span>TP1</span><span>TP2</span><span>TP3</span></div>
+        </div>
+      </article>
+
+      <article class="card stats-card">
+        <div class="section-heading"><div><p class="eyebrow">PERFORMANCE</p><h2>Összesített statisztika</h2></div></div>
+        <div class="stats-list">
+          <div><span>Összes jelzés</span><strong id="all-signals">0</strong></div><div><span>Profit factor</span><strong id="profit-factor">0.00</strong></div>
+          <div><span>Átlagos R</span><strong id="average-r">0.00</strong></div><div><span>Nettó R</span><strong id="net-r">0.00</strong></div>
+          <div><span>Breakeven</span><strong id="breakeven">0</strong></div><div><span>TP1 lock</span><strong id="tp1-locked">0</strong></div>
+        </div>
+        <div class="targets"><div><span>TP1</span><strong id="tp1-hits">0</strong></div><div><span>TP2</span><strong id="tp2-hits">0</strong></div><div><span>TP3</span><strong id="tp3-hits">0</strong></div></div>
+      </article>
+    </section>
+
+    <section class="card chart-card"><div class="section-heading"><div><p class="eyebrow">EQUITY</p><h2>Teljesítménygörbe (R)</h2></div><span id="chart-value" class="badge neutral">0.00 R</span></div><canvas id="equity-chart" height="240"></canvas></section>
+
+    <section class="card history-card"><div class="section-heading"><div><p class="eyebrow">JOURNAL</p><h2>Legutóbbi lezárt jelzések</h2></div><input id="history-filter" placeholder="Keresés: EURUSD, BUY, TP3..."></div><div class="table-wrap"><table><thead><tr><th>Idő</th><th>Symbol</th><th>Irány</th><th>Eredmény</th><th>TP</th><th>Entry</th><th>Exit</th></tr></thead><tbody id="history-body"></tbody></table><div id="history-empty" class="table-empty">Még nincs lezárt jelzés.</div></div></section>
+    <footer><span id="last-update">Utolsó frissítés: --</span><span>AURUM v2.1</span></footer>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

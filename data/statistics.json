@@ -1,0 +1,41 @@
+{
+    "updated_at": "2026-07-26T15:54:11.991769+02:00",
+    "all_time": {
+        "signals": 0,
+        "settled_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "breakeven": 0,
+        "expired": 0,
+        "tp1_locked": 0,
+        "tp1_hits": 0,
+        "tp2_hits": 0,
+        "tp3_hits": 0,
+        "win_rate": 0.0,
+        "loss_rate": 0.0,
+        "average_rr": 0.0,
+        "profit_factor": 0.0,
+        "net_r": 0,
+        "gross_profit_r": 0,
+        "gross_loss_r": 0
+    },
+    "today": {
+        "signals": 0,
+        "settled_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "breakeven": 0,
+        "expired": 0,
+        "tp1_locked": 0,
+        "tp1_hits": 0,
+        "tp2_hits": 0,
+        "tp3_hits": 0,
+        "win_rate": 0.0,
+        "loss_rate": 0.0,
+        "average_rr": 0.0,
+        "profit_factor": 0.0,
+        "net_r": 0,
+        "gross_profit_r": 0,
+        "gross_loss_r": 0
+    }
+}

@@ -1,5 +1,25 @@
-.venv/
-__pycache__/
-*.pyc
+# Környezeti változók és titkos adatok
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtuális környezet
+venv/
+.venv/
+env/
+
+# IDE
 .vscode/
+.idea/
+
+# AURUM állapotadatok
+data/signal_state.json
+data/*.tmp
+
+# Logok
+logs/
+*.log
